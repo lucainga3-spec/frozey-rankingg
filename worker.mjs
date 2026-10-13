@@ -7,7 +7,7 @@ export async function promote(userId, cloud) {
   const data = await cloud(`groups/${group}/memberships?${query}`);
   const membership = data.groupMemberships?.find(m => m.user === `users/${userId}`);
   if (!membership) return {ok:false, status:'not_in_group'};
-  if (!new RegExp(`^groups/${group}/memberships/\\d+$`).test(membership.path)) throw new Error('Invalid membership path');
+  const membershipPath = `groups/${group}/memberships/${userId}`;
   const paths = membership.roles?.length ? membership.roles : (membership.role ? [membership.role] : []);
   if (!paths.length) throw new Error('Cannot determine current roles');
   for (const path of paths) {
@@ -16,7 +16,7 @@ export async function promote(userId, cloud) {
     if (!Number.isInteger(current.rank)) throw new Error('Cannot determine current rank');
     if (current.rank >= 3) return {ok:true, status:'already_ranked'};
   }
-  await cloud(`${membership.path}:assignRole`, {method:'POST', body:JSON.stringify({role:target})});
+  await cloud(`${membershipPath}:assignRole`, {method:'POST', body:JSON.stringify({role:target})});
   return {ok:true, status:'promoted'};
 }
 
@@ -82,5 +82,4 @@ export default {
     }
   }
 };
-
 
